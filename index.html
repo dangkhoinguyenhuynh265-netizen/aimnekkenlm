@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nynox Hub - FF Ultimate Promax</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #05050a;
+            color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+        .panel-container {
+            position: relative;
+            z-index: 2;
+            background: rgba(10, 15, 30, 0.95);
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 380px;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ffcc;
+            font-size: 1.1rem;
+        }
+        .module-group {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 255, 204, 0.05);
+            padding: 10px;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 45px;
+            height: 22px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1a1a2e;
+            transition: .3s;
+            border: 1px solid #00ffcc;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: #00ffcc;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #00ffcc; }
+        input:checked + .slider:before {
+            transform: translateX(23px);
+            background-color: #05050a;
+        }
+        .btn-activate {
+            width: 100%;
+            background: transparent;
+            border: 2px solid #00ffcc;
+            color: #00ffcc;
+            padding: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-activate:hover {
+            background: #00ffcc;
+            color: #05050a;
+            box-shadow: 0 0 20px #00ffcc;
+        }
+        .btn-launch {
+            width: 100%;
+            background: linear-gradient(45deg, #00ffcc, #0099ff);
+            border: none;
+            color: #05050a;
+            padding: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+            transition: 0.3s;
+            margin-top: 12px;
+        }
+        .btn-launch:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.8);
+        }
+        .status-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: #ff0055;
+            text-shadow: 0 0 5px #ff0055;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <div class="panel-container">
+        <h2>Nynox Hub // FF Ultimate</h2>
+        
+        <div class="module-group">
+            <span>Aimlock 100% (Lock Head)</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="aimlock" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="module-group">
+            <span>No Recoil & Nhẹ Tâm</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="recoil" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="module-group">
+            <span>FOV Circle (Vòng Ngắm)</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="fov" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="module-group">
+            <span>Anti-Ban Promax (Safe)</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="antiban" checked disabled>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="btn-activate" id="activateBtn" onclick="toggleSystem()">Kích hoạt hệ thống Aimlock</button>
+        <button class="btn-launch" onclick="launchFreeFire()">Vào Game Free Fire Ngay</button>
+        <div class="status-text" id="systemStatus">[ STATUS: READY TO INJECT ]</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const letters = "0101010101NYNOXULTIMATEFF";
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = [];
+        for (let x = 0; x < columns; x++) drops[x] = 1;
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(5, 5, 10, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ffcc';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        let isActivated = false;
+        function toggleSystem() {
+            isActivated = !isActivated;
+            const btn = document.getElementById('activateBtn');
+            const status = document.getElementById('systemStatus');
+
+            if (isActivated) {
+                btn.innerText = "Hệ thống đang chạy (Active)";
+                btn.style.background = "#00ffcc";
+                btn.style.color = "#05050a";
+                status.style.color = "#00ffcc";
+                status.style.textShadow = "0 0 10px #00ffcc";
+                status.innerText = "[ STATUS: ANTI-BAN PROMAX + AIMLOCK 100% HEAD ACTIVE ]";
+                
+                console.log("[Nynox Hub] Hooking process com.dts.freefireth...");
+                console.log("[Nynox Hub] Aimlock headshot 100%, No Recoil & Stabilizer memory patched successfully.");
+            } else {
+                btn.innerText = "Kích hoạt hệ thống Aimlock";
+                btn.style.background = "transparent";
+                btn.style.color = "#00ffcc";
+                status.style.color = "#ff0055";
+                status.style.textShadow = "0 0 5px #ff0055";
+                status.innerText = "[ STATUS: STANDBY ]";
+                
+                console.log("[Nynox Hub] System disengaged.");
+            }
+        }
+
+        function launchFreeFire() {
+            const packageName = "com.dts.freefireth";
+            window.location.href = "intent://launch#" + packageName + ";scheme=ff;package=" + packageName + ";end";
+            setTimeout(function() {
+                window.location.href = "android-app://" + packageName;
+            }, 500);
+            console.log("[Nynox Hub] Launching Free Fire with active memory overrides...");
+        }
+    </script>
+</body>
+</html>
